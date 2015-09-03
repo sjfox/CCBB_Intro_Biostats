@@ -1,13 +1,19 @@
 #Let's Make a Deal Simulation
 ##Original Formulation
-Suppose you're on a game show, and you're given the choice of three doors: Behind one door is a car; behind the others, goats. You pick a door, say No. 1, and the host, who knows what's behind the doors, opens another door, say No. 3, which has a goat. He then says to you, "Do you want to switch your door to No. 2?" Is it to your advantage to switch your choice?
+Suppose you're on a game show, and you're given the choice of three doors. Behind one door is a car; behind the others, goats. 
+
+You pick a door, say No. 1. Then the host, who knows what's behind the doors, opens another door, say No. 3, which has a goat. He then says to you, "Do you want to switch your door to No. 2?" 
+
+**Is it to your advantage to switch your choice?**
+
+It's a crazy world--you could end up on an American game show from the 1970s tomorrow. So we'll coach you on strategy. Using R, of course.
 
 ##Rules of the Game
 1. The host must always open a door that was not picked by the contestant.
 2. The host must always open a door to reveal a goat and never the car.
 3. The host must always offer the chance to switch between the originally chosen door and the remaining closed door.
 
-More information on the problem can be found [here](https://en.wikipedia.org/wiki/Monty_Hall_problem)
+More information on the problem can be found [here](https://en.wikipedia.org/wiki/Monty_Hall_problem).
 
 ## Some necessary functions
 This chunk contains code we haven't talked about in class, so you can simply run this chunk for now (It needs to be run for the rest to work). Only come back to it if you have time in the end or are interested later on.

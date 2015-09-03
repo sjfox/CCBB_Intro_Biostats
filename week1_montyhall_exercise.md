@@ -9,7 +9,7 @@ Suppose you're on a game show, and you're given the choice of three doors: Behin
 
 More information on the problem can be found [here](https://en.wikipedia.org/wiki/Monty_Hall_problem)
 
-# Some necessary functions
+## Some necessary functions
 This chunk contains code we haven't talked about in class, so you can simply run this chunk for now (It needs to be run for the rest to work). Only come back to it if you have time in the end or are interested later on.
 ```{r, echo=FALSE}
 rm(list=ls())
@@ -170,7 +170,7 @@ Great, things look to be working! Okay, using the technique from that last step,
 
 Okay, now run everything again for the other strategy. Which was better?
 
-# Advanced Questions: 
+## Advanced Questions: 
 * Add in a strategy function that after the door is opened, randomly chooses between the two remaining doors as its selection. 
 * What should the probability of this winning be? Do your simulated calculations match? 
 * What if there were four doors? Can you code up a way to choose between the remaining 3 if only one door was opened, and does the winning strategy stay the same?

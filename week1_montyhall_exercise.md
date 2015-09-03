@@ -9,11 +9,9 @@ Suppose you're on a game show, and you're given the choice of three doors: Behin
 
 More information on the problem can be found [here](https://en.wikipedia.org/wiki/Monty_Hall_problem)
 
+# Some necessary functions
+This chunk contains code we haven't talked about in class, so you can simply run this chunk for now (It needs to be run for the rest to work). Only come back to it if you have time in the end or are interested later on.
 ```{r, echo=FALSE}
-# This chunk contains code we haven't talked about in class, so
-# you can simply run this chunk for now (It needs to be run for the rest to work).
-# Only come back to it if you have time in the end or are interested later on.
-
 rm(list=ls())
 set.seed(12345)
 openDoor <- function(prizeDoor, firstChoice, possibleDoors=c(1,2,3)){
@@ -54,79 +52,92 @@ montyHallSim <- function(strategy="stay"){
 ```
 
 ##Simulating a Single Game
+First, create a vector of all the possible door choices:
 ```{r}
-# First, create a vector of all the possible door choices
 possibleDoors <- c(1, 2, 3)
+```
 
-# Now let's randomly sample from this list to decide which door has the prize
-# The sample function takes in a vector of items, and will randomly choose one of them to return
-# as we have set size = 1. If you select more than one, then you also need to specify whether
-# you want to sample with replacement (replace=TRUE)
-# type ?sample for more info
+Now let's randomly sample from this list to decide which door has the prize.
+
+The `sample` function takes in a vector of items, and will randomly choose one of them to return,
+as we have set the argument `size = 1`.
+```{r}
 prizeLocation <- sample(x = possibleDoors, size = 1)
+# type ?sample for more info
+```
+If you wanted to select more than one to return, then you also need to specify whether you want to sample with replacement (argument `replace=TRUE`).
 
-# Let's also assume our first choice is random amongst the doors
+Let's also assume our first choice is random amongst the doors:
+```{r}
 firstChoice <- sample(x = possibleDoors, size = 1)
 
 print(c(prize = prizeLocation, 
         firstChoice = firstChoice))
 ```
-Great, now we have our prize and our first door choice! Now we need to open a door according to the rules of the game. I've created a function to do this called openDoor, which takes int the location of the prize and your first door choice. You can look at if you're interested in the first code chunk.
 
+Great, now we have our prize and our first door choice! 
+
+Now we need to open a door according to the rules of the game. I've created a function to do this called `openDoor`, which takes two integer arguments: the location of the prize and your first door choice. If you are interested in this function, you can look at the first code chunk.
 ```{r}
 openedDoor <- openDoor(prizeDoor = prizeLocation, firstChoice = firstChoice)
+```
 
-# Now, we need our strategy. Let's say that we stay with our first door choice
+Now, we need our strategy. Let's say that we stay with our first door choice
+```{r}
 finalChoice <- firstChoice
+```
 
-#Consider how you might code a switch to your door based on the rules of the game
-# If you have time, try it out here:
+Consider how you might code a switch to your door based on the rules of the game. If you have time, try it out here.
+```
+# your code goes here
+```
 
-
-# Awesome, now we have a single full simulation of the game!
+Awesome, now we have a single full simulation of the game!
+```{r}
 print(c(prize = prizeLocation, 
         firstChoice = firstChoice, 
         openDoor=openedDoor, 
         finalChoice=finalChoice))
 
-#Check to see if we won
+# Check to see if we won
 finalChoice==prizeLocation
 ```
 
 Now if we won (lost) does that mean that is the right (wrong) strategy? No, of course not. Run the code again and see what happens. Was the outcome the same? Maybe, or maybe not, but either way it's obvious we need to run more replicates and this is not an efficient way to do so.
 
 ##Simulating Many Games
-Now I've coded a function called montyHallSim() that does this process for us. The only parameter it takes in is a strategy (either "stay" or "switch"). If you have time or the desire, take a look at it in the first chunk! Okay, so what does the function output: 
+Now I've coded a function called `montyHallSim()` that does this process for us. The only argument it takes in is a strategy (either "stay" or "switch"). If you have time or the desire, take a look at it in the first code chunk. 
+So what does the function output?
 ```{r}
 strategy <- "switch"
 # strategy <- "stay"
 montyHallSim(strategy)
-
-
 ```
-You can see it outputs the same as we had previously, but we can do it with one line. I've also added a "win" number, which equals "1"" if we won, or "0" if we lost. Okay, so now let's run this a few times and store the output in a matrix.
 
+You can see it outputs the same game result as we had previously, but we can do it with one line: all the previous commands have been coded into a single function. I've also added a "win" number, which equals "1"" if we won, or "0" if we lost. 
+
+Now let's run this a few times and store the output in a matrix. First, we set up some variables governing the simulations:
 ```{r}
-#First set up all of the variables
 numReps <- 10
 strategy <- "switch" # or "stay"
+```
 
-#Now let's setup a matrix to be filled in
-#We don't want any row names, as these just correspond to simulation number
+Now let's setup a matrix to store the results. We don't want any row names, as these just correspond to simulation number:
+```{r}
 rowNames <- NULL
 
-#Column names need to be the same exact order as our simulation output
+# Column names need to be the same exact order as our simulation output
 colNames <- c("prizeLocation", "firstChoice", "openDoor", "finalChoice", "win")
+```
 
-# Now let's make our matrix of the correct dimensions (dimnames) by specifying 
-# the number of rows (nrow) which is the number of replicates we want to run (numReps) 
-# and the number of columns (ncol), which is the same length as our column names
-# and we first fill it in with "NA" values which correspond to no data
-# see ?matrix for more information on this process
+Now let's make our matrix of the correct dimensions by specifying the number of rows (`nrow`) which is the number of replicates we want to run (`numReps`), and the number of columns (`ncol`) which is the same length as our column names. Argument `dimnames` gives the names we specified previously to the rows and columns. We first fill the matrix in with missing values by specifying `data=NA`, which correspond to no data (see `?matrix` for more information on this process).
+```{r}
 montyData <- matrix(data = NA, nrow = numReps, ncol = length(colNames), 
                     dimnames = list(rowNames, colNames))
+```
 
-# Runs a loop for numReps and stoes the result in the correct row
+Now we'll run a loop for the specified number of simulations (`numReps` which we defined a few code blocks back), and store the result of each simulation in the correct row.
+```{r}
 for(rep in seq(1,numReps)){
   montyData[rep,] <- montyHallSim(strategy)
 }
@@ -134,16 +145,16 @@ for(rep in seq(1,numReps)){
 head(montyData)
 ```
 
-Okay, so what can we get from this? First, let's see if everything kind of looks correct. We should have roughly equal number of prize door selections, and first choices (since they were random).
-
+Okay, so what can we get from this? First, let's see if everything kind of looks correct. We should have roughly equal number of prize door selections, and first choices (since they were both random).
 ```{r}
 # The table function prints occurence counts in a column
 table(montyData[,"prizeLocation"])
 
 table(montyData[,"firstChoice"])
 ```
-Hm, that may not look correct depending on your simulation. Go back and change numReps to a larger number (1000, 10000, etc.), and then look at these tables. Do they look closer to your expectation? Just as a secondary sanity check, we also know that we should never have opened a door that has the prize, or was our first selection, so let's check that as well.
+Hm, that may not look correct depending on how many times you ran your simulation. Go back and change `numReps` to a larger number (1000, 10000, etc.), rerun the simulations, and then look at these tables. Do they look closer to your expectation? 
 
+Just as a secondary sanity check, we also know that we should never have opened a door that has the prize, or was our first selection, so let's check that as well.
 ```{r}
 # Logical values FALSE evaluate to 0 and TRUE evaluate to 1,
 # so if everything is correct, the sum should equal 0
@@ -154,9 +165,8 @@ sum(montyData[,'firstChoice'] == montyData[,'openDoor'])
 
 Great, things look to be working! Okay, using the technique from that last step, try coding for yourself how you might calculate the percent of times your final door was the correct door. 
 ```{r}
-
+# your code goes here
 ```
-
 
 Okay, now run everything again for the other strategy. Which was better?
 
@@ -164,7 +174,6 @@ Okay, now run everything again for the other strategy. Which was better?
 * Add in a strategy function that after the door is opened, randomly chooses between the two remaining doors as its selection. 
 * What should the probability of this winning be? Do your simulated calculations match? 
 * What if there were four doors? Can you code up a way to choose between the remaining 3 if only one door was opened, and does the winning strategy stay the same?
-
 
 ```{r}
 prizeLocation <- sample(x = possibleDoors, size = numReps, replace = T)
@@ -178,7 +187,6 @@ montyData <- data.frame(prizeLocation, firstChoice, openedDoor)
 ```
 
 Great, now what do our data look like?
-
 ```{r}
 head(montyData)
 ```

@@ -1,6 +1,6 @@
 # CCBB Biostats Introduction
 
-This repository contains materials from the Fall 2015 introduction to biostatistics, a seminar taught by graduate students for graduate students.
+This repository contains materials from the Fall 2015 **Introduction to Biostatistics** at UT-Austin. This is a seminar taught by graduate students for graduate students.
 
 For more information, contact Nathaniel Pope at npope@coa.edu, Spencer Fox at spncrfx@gmail.com, or Nichole Bennett at nichole.lynn.bennett@gmail.com.
 

@@ -250,6 +250,42 @@ str(myDataFrame)
 	#@  $ blarg: num  1 2 1 2
 ```
 
+### Reading in, writing out, and indexing data
+
+First, we need to move into the working directory with our data. This is where files will get read in from, and written out to.
+```r
+## for example ... replace the following with a path specific to your computer, or use the R/RStudio GUI menu.
+setwd("~/Dropbox/School/computing2015") 
+```
+
+It's most convenient to input data as a delimited table. Use the function `read.table(file, options)` to read in a delimited table as a data frame.
+```r
+# reads data from a comma-separated table with a header
+Adoxo_count <- read.table("Adoxophyes_counts.csv", sep = ",", header = TRUE)
+Adoxo_temp <- read.table("Adoxophyes_temp.csv", sep = ",", header = TRUE)
+str(Adoxo_count)
+	#@ 'data.frame':	2754 obs. of  3 variables:
+	#@ $ day              : int  64 69 74 79 84 89 95 100 105 110 ...
+	#@ $ year             : int  1961 1961 1961 1961 1961 1961 1961 1961 1961 1961 ...
+	#@ $ Adoxophyes_honmai: int  0 0 1 3 0 0 4 0 0 0 ...
+	
+head(Adoxo_temp)
+	#@   year day temperature
+	#@ 1 1960   1       5.800
+	#@ 2 1960   2       7.775
+	#@ 3 1960   3       9.750
+	#@ 4 1960   4      11.725
+	#@ 5 1960   5      13.700
+	#@ 6 1960   6       0.700
+```
+The argument `header = TRUE` indicates that the first row is column names.
+
+The function `write.table(data, file, options)` takes `data` and writes it into `file`.
+```r
+# writes data out to a comma-separated table without the numeric row names
+write.table(Adoxo_count, "Adoxo_count_copy.csv", sep = ",", row.names=F)  
+```
+
 ##### Bracket notation for indexing
 The following examples index a data frame, but the same applies to vectors/matrices/arrays.
 
@@ -452,57 +488,7 @@ dnorm(Adoxo_temp$temperature[1:5], log=T) # evaluates standard normal pdf for ea
 	#@ [1] -17.73894 -31.14425 -48.45019 -69.65675 -94.76394
 ```
 
-The function `apply(data, margin, function, arguments)` is faster than looping over rows or columns, and automatically return the results in a convenient form. 
-```r
-## we put the temperature data into column form for the first few years
-Adoxo_temp_wide <- data.frame(y1961 = Adoxo_temp$temp[Adoxo_temp$year == 1961], 
-	y1962 = Adoxo_temp$temp[Adoxo_temp$year == 1962], 
-	y1963 = Adoxo_temp$temp[Adoxo_temp$year == 1963])
-head(Adoxo_temp_wide)
-	#@   y1961 y1962  y1963
-	#@ 1  1.30  2.40  5.000
-	#@ 2  3.35  4.45  6.475
-	#@ 3  5.40  6.50  7.950
-	#@ 4  7.45  8.55  9.425
-	#@ 5  9.50 10.60 10.900
-	#@ 6  3.70  2.30 -0.500
-
-## rather than looping like this ...
-quants <- matrix(ncol=ncol(Adoxo_temp_wide), nrow=2)
-for(i in 1:ncol(Adoxo_temp_wide)){
-	quants[,i] <- quantile(Adoxo_temp_wide[,i], probs=c(0.025,0.975))
-}
-quants
-	#@        [,1]  [,2]  [,3]
-	#@ [1,]  1.720  2.21  0.71
-	#@ [2,] 30.192 30.00 29.90
-
-## use apply() function
-quants <- apply(Adoxo_temp_wide, MARGIN=2, quantile, probs=c(0.025,0.975))
-quants
-	#@        y1961 y1962 y1963
-	#@ 2.5%   1.720  2.21  0.71
-	#@ 97.5% 30.192 30.00 29.90
-```
-The argument `MARGIN=1` specifies rows (think: rows, columns, etc.). The margin argument generalizes to any dimension. `apply()` works on data frames and vectors/arrays/matrices, and outputs an array.
-
-`lapply(list, function, function arguments)` is the analogue of `apply()` for lists. It takes a list as input, and outputs a list.
-```r
-Adoxo_temp_list <- list(y1961 = Adoxo_temp$temp[Adoxo_temp$year == 1961], 
-	y1962 = Adoxo_temp$temp[Adoxo_temp$year == 1962], 
-	y1963 = Adoxo_temp$temp[Adoxo_temp$year == 1963])
-
-# calculate mean for each element of the list
-lapply(Adoxo_temp_list, mean)
-	#@ $y1961
-	#@ [1] 17.28863
-	#@ 
-	#@ $y1962
-	#@ [1] 16.74288
-	#@ 
-	#@ $y1963
-	#@ [1] 16.55151
-```
+Looping is slow. You can use `apply` and related functions to move quickly over rows or columns of any array, applying a function to each row. Read more about this in the full version of this document.
 
 ### Help
 

@@ -1,4 +1,5 @@
 This is an abridged version of a longer tutorial, which can be found at:
+https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md
 
 # Introduction to R
 
@@ -519,4 +520,4 @@ And of course, [stackoverflow](http://stackoverflow.com/questions/tagged/r).
 
 ### Full document
 Again, this is an abridged form of a slightly longer document. You can find it at:
-
+https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md

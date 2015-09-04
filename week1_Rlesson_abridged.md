@@ -45,6 +45,12 @@ y
 	#@ "yakkity yak"
 ```
 
+You can see the objects in your *workspace* by the function `ls()`.
+```r
+ls()
+	#@ [1] "fx1" "fx2" "x" "y"
+```
+
 Objects have attributes. The most basic attribute of an object is its class(es).
 ```r
 class(fx2)

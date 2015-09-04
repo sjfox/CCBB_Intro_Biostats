@@ -1,3 +1,5 @@
+This is an abridged version of a longer tutorial, which can be found at:
+
 # Introduction to R
 
 R is a high-level programming language most typically used for statistical analysis and data manipulation.
@@ -246,172 +248,6 @@ str(myDataFrame)
 	#@  $ geez : num  5 6 7 8
 	#@  $ blarg: num  1 2 1 2
 ```
-
-### Functions
-All functions in R follow the same format: `function_name(function_argument_one, function_argument_two, etc.)`. 
-
-For example, the functions `sin` and `cos` take a single argument: the value (or collection of values) to transform. The function `data.frame` takes an unlimited number of arguments, each of which is a column in the data frame.
-
-You will often want to combine various functions and operations into a new function, which you can then repeatedly apply to data.
-```r
-## syntax for creating a function
-myFunction <- function(arguments, more arguments){
-	x <- whatever(crap, you, want)
-	return(x)
-}
-```
-
-For example, create a function to return the mean, standard error of the mean, and confidence interval of a vector:
-```r
-sumVec <- function(x, alpha){
-	n <- length(x) # length of the vector
-	se <- sd(x)/sqrt(n) # std error
-	mn <- mean(x) # mean of x
-	lo <- mn + qnorm(alpha/2)*se # low bound of confidence interval
-	hi <- mn + qnorm(1-alpha/2)*se # hi bound of confidence interval
-	return( c(mn=mn, se=se, lo=lo, hi=hi) )
-}
-
-## apply function to 100 random normal variates
-set.seed(99)
-normal_sample <- rnorm(100, 12, 2)
-sumVec(normal_sample, 0.01)
-	#@         mn         se         lo         hi 
-	#@ 11.7919582  0.1801482 11.3279272 12.2559892
-```
-
-The arguments to a function can be named or not (in which case they are assumed to follow the order of arguments in the function definition).
-```r
-sumVec(x = normal_sample, alpha = 0.01)
-	#@         mn         se         lo         hi 
-	#@ 11.7919582  0.1801482 11.3279272 12.2559892
-```
-
-You can see the source code for a function by typing its name.
-```r
-## for example, the function to fit a linear regression model
-lm
-	#@ function (formula, data, subset, weights, na.action, method = "qr", 
-	#@    model = TRUE, x = FALSE, y = FALSE, qr = TRUE, singular.ok = TRUE, 
-	#@    contrasts = NULL, offset, ...) 
-	#@ {
-	#@    ret.x <- x
-	#@    ret.y <- y
-	#@    cl <- match.call()
-	#@    mf <- match.call(expand.dots = FALSE)
-	#@    m <- match(c("formula", "data", "subset", "weights", "na.action", 
-	#@        "offset"), names(mf), 0L)
-	#@    mf <- mf[c(1L, m)]
-	#@ <snip>
-```
-
-### Packages
-
-R has a vast array of packages. Packages live in a repository (GitHub is one such). [CRAN](http://cran.r-project.org/) is the primary repository for R packages. [Bioconductor](http://www.bioconductor.org/) also has many packages for bioinformatic analyses. There are also many in-progress packages on R-forge.
-
-Install packages from CRAN with the command `install.packages(package_name)`. Load packages with `library(package_name)`
-```r
-install.packages("plyr", repos="http://cran.us.r-project.org")
-install.packages("sos", repos="http://cran.us.r-project.org")
-install.packages("ggplot2", repos="http://cran.us.r-project.org")
-```
-Another method is needed to install packages from Bioconductor (take a look at the website).
-
-### Help
-
-To see help regarding a specific function (note that the package that the function is in must be loaded!) do `?function_name`
-```r
-?apply
-```
-
-To search for a function across packages which are installed, do `??function_name`
-```r
-??coxph
-```
-
-To search using keywords for a specific type of function across the CRAN repository, use the function `findFn(keywords)` in the package `sos`.
-```r
-library(sos)
-findFn("quantile regression")
-findFn("repeat elements")
-```
-
-And of course, [stackoverflow](http://stackoverflow.com/questions/tagged/r).
-
-### Debugging
-
-Flag a function for debugging with `debug(function_name)`. When you run the function, it will pause before executing each line. To stop this behavior, use `undebug(function_name)`.
-```r
-sumVec( c(0:15), "a") # will fail because the confidence level needs to be numeric
-	#@ Error in alpha/2 : non-numeric argument to binary operator
-
-debug(sumVec)
-sumVec( c(0:15), "a")
-undebug(sumVec)
-```
-Use `n` to skip to the next line, `c` to complete a loop, and `Q` to quit debugging mode. Note that if the function calls other functions (and these are throwing the error), you'll also have to flag these for debugging.
-
-Also, you can set R's error-handling behavior to enter debugging mode when something fails:
-```r
-option(error=recover) ## to set error recovery
-sumVec( c(0:15), "a")
-option(error=NULL) ## to stop error recovery
-```
-
-### Scope
-It is important to briefly mention scope in the context of functions. When you save objects, they exist in your working environment. You can see the objects of your working environment by using `ls()`.
-```r
-ls()
-```
-
-When you run a function, it will first look for objects in among its inputs, and then in the working environment.
-```r
-y = 7
-
-scopeTest <- function(x){
-	return( x + y )
-}
-
-scopeTest(1)
-	#@ [1] 8
-```
-
-### Reading in, writing out, and indexing data
-
-First, we need to move into the working directory with our data. This is where files will get read in from, and written out to.
-```r
-## for example ... replace the following with a path specific to your computer, or use the R/RStudio GUI menu.
-setwd("~/Dropbox/School/computing2015") 
-```
-
-It's most convenient to input data as a delimited table. Use the function `read.table(file, options)` to read in a delimited table as a data frame.
-```r
-# reads data from a comma-separated table with a header
-Adoxo_count <- read.table("Adoxophyes_counts.csv", sep = ",", header = TRUE)
-Adoxo_temp <- read.table("Adoxophyes_temp.csv", sep = ",", header = TRUE)
-str(Adoxo_count)
-	#@ 'data.frame':	2754 obs. of  3 variables:
-	#@ $ day              : int  64 69 74 79 84 89 95 100 105 110 ...
-	#@ $ year             : int  1961 1961 1961 1961 1961 1961 1961 1961 1961 1961 ...
-	#@ $ Adoxophyes_honmai: int  0 0 1 3 0 0 4 0 0 0 ...
-	
-head(Adoxo_temp)
-	#@   year day temperature
-	#@ 1 1960   1       5.800
-	#@ 2 1960   2       7.775
-	#@ 3 1960   3       9.750
-	#@ 4 1960   4      11.725
-	#@ 5 1960   5      13.700
-	#@ 6 1960   6       0.700
-```
-The argument `header = TRUE` indicates that the first row is column names.
-
-The function `write.table(data, file, options)` takes `data` and writes it into `file`.
-```r
-# writes data out to a comma-separated table without the numeric row names
-write.table(Adoxo_count, "Adoxo_count_copy.csv", sep = ",", row.names=F)  
-```
-
 
 ##### Bracket notation for indexing
 The following examples index a data frame, but the same applies to vectors/matrices/arrays.
@@ -667,152 +503,20 @@ lapply(Adoxo_temp_list, mean)
 	#@ [1] 16.55151
 ```
 
-### Split-apply-combine
+### Help
 
-Often we want to break our data into peices, do the same routine on each piece, and put the results back together in some form (like a table).
-
-Examples:
-* Break data apart and modify each piece in some way
-* Break data apart and calculate summary statistics on each piece
-* Break data apart and fit each piece to a model
-
-The `apply()` function discussed earlier is applicable to this situation, but a more general solution is implemented in the package `plyr`.
-
-Basic syntax: `**ply(data, how to split data up, function to apply to pieces of data)`
-
-The stars are replaced with letters. The first star indicates the format of the data, the second star indicates the format of the output.
-
-|Letter|Format|
-|------|------|
-|`a`|array|
-|`d`|data frame|
-|`l`|list|
-|`_`|nothing|
-
-So `aaply()` takes an array and returns an array, `alply()` takes an array and returns a list, `a_ply()` takes an array and returns nothing. The underscore `_` is used for the output format only; for example if we want to write out data to the harddrive but not to reassemble it back into an object. 
-
-***Example of split-apply-combine:***
-
-With the *Adoxophyes honmai* count data, we might want to split data up by year and calculate summary statistics. Some reasonable summary statistics might be the mean count, the ratio of zero counts to positive counts, and number of observations in the year. First, we write a function which will take a data frame with the *exact same structure* as the `Adoxo_count` data frame, and will calculate summary statistics on it.
+To see help regarding a specific function (note that the package that the function is in must be loaded!) do `?function_name`
 ```r
-sum_func <- function(x){
-	x <- x[!is.na(x$Adoxophyes_honmai),] # remove rows with missing values
-	mn <- mean(x$Adoxophyes_honmai) # calculate mean
-	zerosToPositives <- sum(x$Adoxophyes_honmai == 0)/sum(x$Adoxophyes_honmai > 0)
-	num_obs <- nrow(x) # number of observations
-	return( c(mean = mn, zero_ratio = zerosToPositives, number_observations = num_obs) )
-}
+?apply
 ```
 
-If we apply `sum_func()` to the whole data frame, we get a summary for the whole data frame.
+To search for a function across packages which are installed, do `??function_name`
 ```r
-sum_func(Adoxo_count)
-	#@        mean          zero_ratio number_observations 
-	#@ 105.8982495           0.1223905        2742.0000000
+??coxph
 ```
 
-If we use `sum_func()` within `ddply()`:
-```r
-ddply(Adoxo_count, .(year), sum_func)
-   	#@    year      mean zero_ratio number_observations
-	#@ 1  1961  23.46296 0.28571429                  54
-	#@ 2  1962  39.77778 0.38461538                  54
-	#@ 3  1963  64.94444 0.17391304                  54
-	#@ 4  1964  45.48148 0.20000000                  54
-	#@ 5  1965  87.27778 0.10204082                  54
-	#@ 6  1966  54.51852 0.05882353                  54
-	#@ 7  1967  73.48148 0.10204082                  54
-	#@ 8  1968 157.29630 0.01886792                  54
-	#@ 9  1969  51.29630 0.12500000                  54
-	#@ 10 1970 130.29630 0.17391304                  54
-	#@ <snip>
-```
+And of course, [stackoverflow](http://stackoverflow.com/questions/tagged/r).
 
-Note that `sum_func()` takes a single argument `x`. In the context of `ddply`, `x` will be a data frame which is a subset of the entire data frame `Adoxo_count` -- a subset which represents a particular year. Also note that with data frames, the syntax `.(variable, another variable)` in the second argument to `**ply` indicates what variables to use to split up the data frame. If we had divided the time series into years and months, we could use `.(year, month)` to calculate summary statistics for each year-month combination in the data. 
+### Full document
+Again, this is an abridged form of a slightly longer document. You can find it at:
 
-The above is a very simple example; a more complicated application would be to fit a spline regression to the temperature data within each year, and return the fitted regression line.
-```r
-splineFit <- function(x){
-	library(splines)
-	fit <- lm(temperature ~ bs(day,8), data = x)
-	return( data.frame(day=x$day, fit=fitted(fit) ) )
-}
-
-splineOut <- ddply(Adoxo_temp, .(year), splineFit)
-
-head(splineOut)
-  	#@   year day      fit
-  	#@ 1 1960   1 9.179364
-  	#@ 2 1960   2 8.901868
-  	#@ 3 1960   3 8.641705
-  	#@ 4 1960   4 8.398524
-  	#@ 5 1960   5 8.171974
-  	#@ 6 1960   6 7.961704
-```
-
-### Graphics
-
-There are two main platforms for graphics in R: `base` and `grid`. Graphics are a huge topic with many associated packages. I'll only give a brief introduction to `ggplot2` which is probably the most popular package for R graphics.
-
-`ggplot2` works with layers. For each layer, you need data, a description of the type of layer (points, lines, whatever), and a mapping from the data onto the graphics objects (like, what variable will go on the x-axis, a color scheme which describes grouping in the data, etc.). Then, for all layers, we need a description of the formatting of the figure as a whole (ie. font size, grid lines, etc.)
-
-In `ggplot2` lingo:
-The description of the type of layer is called a `geom`
-The mapping of data to figure is called an aesthetic, or `aes`
-The general formatting of the figure is called a theme
-
-You can save each layer, or a combination of layers, as an object. If formatting options/mappings/data are specified for a layer, they will override the overall formatting options.
-
-First, we start with a base layer, which will give the base data and base aesthetic to be used (unless overridden in a layer).
-```r
-Adoxo_temp$yearCat <- factor(Adoxo_temp$year) # treat year as categorical not continuous
-myPlot <- ggplot(data = Adoxo_temp[Adoxo_temp$year > 1990,], aes(x = day))
-```
-
-The syntax `aes(x = day)` says to map `day` onto the x-axis.
-
-Now, we add a point layer.
-```r
-myPlot <- myPlot + geom_point(aes(y=temperature, colour = yearCat), alpha=0.5, size = 1)
-myPlot
-```
-The syntax `aes(y = temperature, colour = yearCat)` says to map `temperature` onto the y-axis, and to map `yearCat` onto colour (ie. colour-code years). `alpha` is an option that controls transparency. Note the syntax `geom_whatever()`
-
-We add a line layer, using the results of the Fourier series in the `fourierOut` data table (note we have to specify that we are using different data in this layer).
-```r
-splineOut$yearCat <- factor(splineOut$year)
-myPlot <- myPlot + geom_line(data=splineOut[splineOut$year > 1990,], aes(y = fit, colour = yearCat))
-## plot with regression fit
-myPlot
-```
-
-Currently, all the years are plotted together. We can split these into 'facets' (more `ggplot2` lingo):
-```r
-myPlot <- myPlot + facet_grid(~year)
-## show plot split into facets
-myPlot
-```
-
-We can change the overall formatting to a canned theme:
-```r
-myPlot <- myPlot + theme_minimal()
-## plot with a less gray-heavy color scheme
-myPlot
-```
-
-We can change the formatting beyond a canned theme, for example by adding a border around the panels.
-```r
-myPlot <- myPlot + theme(panel.border = element_rect(fill=NA))
-## plot with border around facets
-myPlot
-```
-
-Note that we could have done this in one line, adding all layers together.
-```r
-myPlot <- ggplot(data = Adoxo_temp[Adoxo_temp$year > 1990,], aes(x = day)) + geom_point(aes(y=temperature, colour = yearCat), alpha=0.5, size = 1) + geom_line(data=splineOut[splineOut$year > 1990,], aes(y = fit, colour = yearCat)) + facet_grid(~year) + theme_minimal() + theme(panel.border = element_rect(fill=NA))
-```
-
-Note: there is a function `qplot()` which provides a quick syntax for many basic plot types, without the layer-on-layer syntax. Many people learn using `qplot` because the syntax is closer to base R graphics. 
-I don't recommend learning using this, because `qplot` is a less flexible syntax. Learn the long, arduous syntax first.
-
-There are many nuances to `ggplot2`. You can easily create your own geoms, add custom graphical elements using package `gtable`, etc.  See the `ggplot2` online documentation.

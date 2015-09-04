@@ -180,28 +180,3 @@ Okay, now run everything again for the other strategy. Which was better?
 * Add in a strategy function that after the door is opened, randomly chooses between the two remaining doors as its selection. 
 * What should the probability of this winning be? Do your simulated calculations match? 
 * What if there were four doors? Can you code up a way to choose between the remaining 3 if only one door was opened, and does the winning strategy stay the same?
-
-```{r}
-prizeLocation <- sample(x = possibleDoors, size = numReps, replace = T)
-firstChoice <- sample(x = possibleDoors, size = numReps, replace = T)
-
-#Vector holding which door was opened
-#The revealed door is the door not either the car location or your first choice
-openedDoor <- openDoors(prizeLocation, firstChoice)
-
-montyData <- data.frame(prizeLocation, firstChoice, openedDoor)
-```
-
-Great, now what do our data look like?
-```{r}
-head(montyData)
-```
-
-```{r}
-#Always stays with the first door made
-montyData$alwaysStay <- firstChoice
-
-montyData$alwaysSwitch <- switchStrategy(firstChoice = montyData$firstChoice, openedDoor = montyData$openedDoor)
-
-chooseCorrect(prizeDoor = montyData$prizeLocation, myFinalChoice = montyData$alwaysSwitch)
-```

@@ -1,5 +1,4 @@
-This is an abridged version of a longer tutorial, which can be found at:
-https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md
+This is an abridged version of a longer tutorial, which can be found [here](https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md).
 
 # Introduction to R
 
@@ -505,5 +504,4 @@ To search for a function across packages which are installed, do `??function_nam
 And of course, [stackoverflow](http://stackoverflow.com/questions/tagged/r).
 
 ### Full document
-Again, this is an abridged form of a slightly longer document. You can find it at:
-https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md
+Again, this is an abridged form of a slightly longer document. You can find it [here](https://github.com/sjfox/CCBB_Intro_Biostats/blob/master/week1_Rlesson_unabridged.md).

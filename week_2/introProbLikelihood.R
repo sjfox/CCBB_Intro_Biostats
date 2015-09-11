@@ -59,14 +59,20 @@ table(flips)
 # Basic probability in R - Distributions
 # Okay so if we don't normally use sample, what do we use?
 # Well let's go back to the coinflip real quick
-# a coin flip is really a bernoulli trial with 50% probability of success
+# One option is to draw a uniform number between (0,1), 
+# and call heads >0.5, and tails everything else
+flips <- runif(n = 10000, min = 0, max = 1) > 0.5
+table(flips)
+
+# a coin flip can also be thought of as a bernoulli trial with 50% probability of success
 # a bernoulli trial is a single binomial trial, so we can use rbinom() to sample
 # Take a lot of samples and look at the result
 flips <- rbinom(n=100000, size = 1, prob = .5)
 # Imagine heads=0 and tails=1
 table(flips)
 
-# Okay, so now lets look at some distributions
+# So you can see once again that there are a number of ways of doing things in R
+# Now lets look at some distributions
 # First generate some data from a normal distribution
 plotDat <- rnorm(n = 10, mean = 0, sd = 10)
 
@@ -83,8 +89,17 @@ curve(dnorm(x, mean = 0, sd = 10), add=TRUE)
 # Okay that doesn't look very normal, go back and generate many more random numbers (~10000)
 # Plot it again, does it look better? (hint altering the breaks parameter for ?hist might help if not)
 
-# So let's now assume that you're an epidemiologist tracking the flu
-# during a pandemic, and assume 15% of the population is infected 
+##########################
+# Now plot a random sampling from a poisson distribution of rate 5 in the same fashion
+# Be careful, poisson distributions can only take in integer values!
+# hint: use the function round() or ceiling() -- compare these two function outputs
+
+
+
+####################################################
+# Great now your experts in generating random numbers from distributions
+# So now let's now assume that you're an epidemiologist tracking the flu
+# during a pandemic, and assume 15% of the population is truly infected 
 # with the flu currently. If we sample 100 people form our population how
 # many do we expect to find sick? We expect our sample to follow a binomial 
 # distribution with a probability of success equal to the current prevalence (0.15)
@@ -117,34 +132,57 @@ dbinom(x = numPos, size = 100, prob = .15)
 # So we go collect some data, and see how likely those data are under a number of 
 # hypothetical scenarios. For example, what was the probability of getting our number of positives
 # with the true prevalence of 15%? what about if the true prevalence was 30%? 45%?
+# Try a couple different probabilities, and think about what those likelihoods mean.
 dbinom(x = numPos, size = 100, prob = .15)
-dbinom(x = numPos, size = 100, prob = .3)
-dbinom(x = numPos, size = 100, prob = .45)
 
-# Ah, so those likelihoods are pretty different right?
+
+
+# Ah, so those likelihoods can be pretty different right?
 # Well now lets look at the likelihood we would get our sample from all possible probabilities
+# First create a vector of probabilities to test
 probs <- seq(0,1,length.out = 1000)
+
+# Now calculate the likelihood of observing our data for each of them
 likelihoods <- dbinom(x = numPos, size = 100, prob = probs)
+
+#Plot the result
 plot(probs, likelihoods, type = "l", lwd=2)
 
 # Any guesses to what that maximum likelihood estimate corresponds to?
 # Graphs are great, but now let's try to get an actual estimate for the 
 # influenza prevalence from our data
+# Here is one crude way from what we already have to find the maximum likelihood estimate
+probs[match(max(likelihoods), likelihoods)]
+
+# Does that value make sense based on our data?
+# Draw a different numPos sample, and rerun the code. What do you notice about the estimate?
+
+
+###############################
+# Often the MLE is not so easy to find, so we will now create a simple likelihood function
+# and solve it using the optim() function, which is a much more powerful way to get MLEs
 # First let's create a function that gives back the negative log likelihood of our model
 
-#Sidebar:
-# We use negative log-likelihood, because it simplifies calculations and historical purposes
+# Sidebar:
+# We usually minimize the negative log-likelihood rather than maximize the likelihood, 
+# because the log simplifies calculations and the minimization is for historical purposes
 # Don't quote me on that above statement, but I've never heard a real reason for using it other than that
 
 # Okay so when we create functions, we need to think of three main things
-# What do we want to do, what do we need to do it, and what do we want to return
+# What do we want to do, what values do we need to do that, and what do we want to return
 # In our case, we want to return the likelihood of observing our data points given
 # any hypothetical prevalence rate
+# So we know we are going to need all of the parameters for the dbinom function
+# these include our sampled data, the size of our sample, and the hypothetical prevalence we're testing
 negLL <- function(fitPrev, sampleData, size=100){
+  # Then just return the negative of the likelihood like we calculated earlier
   - dbinom(sampleData, size = size, prob = fitPrev, log = T)
 }
 
 # Now we will use a function called optim
+# Normally with only 1 parameter, we would use a different function, 
+# but we want to show you optim so that you can use it for more complicated models later on
+# so ignore the warning for now
 paramEstimate <- optim(par = 0.1, fn = negLL, sampleData = numPos, hessian=T)
 
 paramEstimate$par
@@ -152,11 +190,11 @@ paramEstimate$par
 
 
 ######################################################
-# Now take multiple (~10) samples from your population with 15% prevalence
-# How would you alter the functions above to find the MLE of those multiple samples?
-# Code it below
+# Let's say now you go out and take ~10 random samplings of 100 individuals from the population.
+# How would you alter the function and optim above to find the MLE of those multiple samples?
+# Take the samples, and code up the new function and optimize
+# How do your estimates compare to the true prevalence (15%)?
 ######################################################
-
 
 
 

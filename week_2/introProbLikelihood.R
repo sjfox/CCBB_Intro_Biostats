@@ -202,7 +202,8 @@ paramEstimate$par
 # Great, we were able to get an MLE which makes sense
 
 # now what about the standard error of the MLE?
-# this is equal to the inverse of the Hessian, which are the second derivatives of the log-likelihood.
+# this is equal to the square root of the inverse of the Hessian, 
+# which are the second derivatives of the log-likelihood (in matrix form with multiple parameters).
 standardError <- sqrt(1/paramEstimate$hessian)
 confidenceInterval <- c(paramEstimate$par-1.96*standardError, paramEstimate$par+1.96*standardError)
 confidenceInterval

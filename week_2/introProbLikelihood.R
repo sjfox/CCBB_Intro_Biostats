@@ -5,8 +5,6 @@
 # CCBB Fall 2015
 # Spencer Fox
 ##################################################
-
-
 rm(list=ls())
 set.seed(808)
 
@@ -23,6 +21,7 @@ table(flips)
 
 # Create a vector for the sample space of rolling a die
 # sample from your vector and output the results as in the coin flip above
+
 
 
 #################################################
@@ -46,7 +45,7 @@ table(flips)
 # p - cumulative probability up to a certain value (is the output)
 # q - inverse cumulative probability (returns the number that has a cumulative probability of a certain value)
 
-# These functions are accessed in the format "function"+"probability distribution abbreviation"
+# These functions are accessed in the format "letter"+"probability distribution abbreviation"
 # For example, if we want to generate random numbers from a normal distribution: rnorm()
 # if we want to generate density values for a poisson distribution: dpois()
 # Each of the four functions and all of the distributions take different inputs
@@ -109,48 +108,48 @@ numPos
 
 # That value corresponds to how many you found to be positive
 # but what does that distribution look like?
-
+ 
 hist(rbinom(n=1000, size=100, prob=0.15), freq=F)
 arrows(x0 = numPos, y0 = 0.8, x1 = numPos, y1 = 0, length = .2, col="red",lwd=3)
 
 # So maybe your value looks close to the center, maybe not.
-# What was the likelihood that we observed that value?
+# What was the likelihood that we observed that value given the true distribution?
 dbinom(x = numPos, size = 100, prob = .15)
 
 # What does that mean?
-# If we know that our data generating process (disease prevalence) follows
-# a binomial distribution of size 100 and success probability of 0.15 then
-# the likelihood of observing our numPos number is whatever that value was for you
-# Is that useful? maybe, but probably not!
-# usually more what we're interested in is finding the maximum likelihood 
-# estimate for a parameter, because we never know the true value
+# It means that under that model (prevalence of 0.15) we had that probability
+# of sampling our number
+
+# In this case, we knew the underlying model (we created it with 15% flu prevalence)
+# usually we don't know the model, and thus have to come up with a "best guess" based on our data
+# This is where likelihood comes into play, and where we look for the maximum likelihood estimate (MLE)
 
 ############################################
 # Basics of Likelihood
 
 # Rarely do we ever know the true disease prevalence (or whatever parameter of interest you fancy)
 # So we go collect some data, and see how likely those data are under a number of 
-# hypothetical scenarios. For example, what was the probability of getting our number of positives
-# with the true prevalence of 15%? what about if the true prevalence was 30%? 45%?
-# Try a couple different probabilities, and think about what those likelihoods mean.
-dbinom(x = numPos, size = 100, prob = .15)
+# hypothetical model scenarios. In this case our model is 15% prevalence, so we can figure out
+# the probability of getting our number of positives with the true prevalence of 15% this way:
+dbinom(x=numPos, size=100, prob=0.15)
+
+# But if we don't know the true prevalence, we can't just look at this one value
+# Find the probability of getting our number of positives if the true prevalence was 5%, 30%, or 45%.
+# How do those numbers compare, and how do they compare to our number of positives?
 
 
-
-# Ah, so those likelihoods can be pretty different right?
 # Well now lets look at the likelihood we would get our sample from all possible probabilities
 # First create a vector of probabilities to test
-probs <- seq(0,1,length.out = 1000)
+probs <- seq(0,1,length.out = 10000)
 
-# Now calculate the likelihood of observing our data for each of them
+# Now calculate the likelihood of observing our data for each of those values
 likelihoods <- dbinom(x = numPos, size = 100, prob = probs)
 
 #Plot the result
 plot(probs, likelihoods, type = "l", lwd=2)
 
 # Any guesses to what that maximum likelihood estimate corresponds to?
-# Graphs are great, but now let's try to get an actual estimate for the 
-# influenza prevalence from our data
+# let's try to get an actual estimate for the influenza prevalence from our data
 # Here is one crude way from what we already have to find the maximum likelihood estimate
 probs[match(max(likelihoods), likelihoods)]
 
@@ -164,30 +163,52 @@ probs[match(max(likelihoods), likelihoods)]
 # First let's create a function that gives back the negative log likelihood of our model
 
 # Sidebar:
-# We usually minimize the negative log-likelihood rather than maximize the likelihood, 
-# because the log simplifies calculations and the minimization is for historical purposes
-# Don't quote me on that above statement, but I've never heard a real reason for using it other than that
+# We usually minimize the negative log-likelihood (deviance) 
+# rather than maximize the likelihood, for calculation simplicity
 
 # Okay so when we create functions, we need to think of three main things
 # What do we want to do, what values do we need to do that, and what do we want to return
+# A general formula for creating functions is as follows: 
+# function_name <- function(parameters, for, function){
+#      Do things with parameters
+#      Return whatever is desired result
+#}
+
 # In our case, we want to return the likelihood of observing our data points given
 # any hypothetical prevalence rate
-# So we know we are going to need all of the parameters for the dbinom function
+# So we know we are going to need all of the inputs for the dbinom function
 # these include our sampled data, the size of our sample, and the hypothetical prevalence we're testing
-negLL <- function(fitPrev, sampleData, size=100){
-  # Then just return the negative of the likelihood like we calculated earlier
-  - dbinom(sampleData, size = size, prob = fitPrev, log = T)
+# We call the hypothetical prevalence "parameters" because often you will run MLE for multiple parameters at once
+# Our sampleData in the current case will just be the numPos we observed, and the size wil be a constant 100,
+# because that's what we did in this case.
+negLL <- function(parameters, sampleData, size=100){
+  # Then just return the negative of the log-likelihood like we calculated earlier
+  - dbinom(sampleData, size = size, prob = parameters[1], log = T)
 }
+
+
 
 # Now we will use a function called optim
 # Normally with only 1 parameter, we would use a different function, 
 # but we want to show you optim so that you can use it for more complicated models later on
 # so ignore the warning for now
-paramEstimate <- optim(par = 0.1, fn = negLL, sampleData = numPos, hessian=T)
+# Optim takes in a vector of parameters "par", a function "fn", and then has many other options
+# We enter in the value of the sampleData for our function in these extra options
+# We also set hessian=T, because this relates to the precision of our estimate (standard error)
+paramEstimate <- optim(par = c(0.1), fn = negLL, sampleData = numPos, hessian=T)
+# note that if you were optimizing with multiple parameters, you would have to give multiple starting values
 
 paramEstimate$par
 # Great, we were able to get an MLE which makes sense
 
+# now what about the standard error of the MLE?
+# this is equal to the inverse of the Hessian, which are the second derivatives of the log-likelihood.
+standardError <- sqrt(1/paramEstimate$hessian)
+confidenceInterval <- c(paramEstimate$par-1.96*standardError, paramEstimate$par+1.96*standardError)
+confidenceInterval
+
+# Are we very confident in our estimate or not? Why might that be?
+# What does this mean in terms of how prevalent we think flu is in the population?
 
 ######################################################
 # Let's say now you go out and take ~10 random samplings of 100 individuals from the population.

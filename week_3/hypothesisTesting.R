@@ -25,7 +25,7 @@ set.seed(6)
 
 # Let's start with a familiar example:
 # You're an epidemiologist tracking the flu during a pandemic, and you've sampled 
-# 100 people from our population, and you've found 25 people to be sick.
+# 100 people from our population, and you've found 23 people to be sick.
 # What can we say about the true prevalence? 
 numPos <- 23
 size <- 100
@@ -70,16 +70,17 @@ barplot(prob,
 # q (default) - calculates the value that has a cumulative 
 # distribution of a certain probability. Inverse cumulative distribution function
 # These functions give inverse values: 
+curve(dnorm(x), from=-2, to=2)
 pnorm(0)
 qnorm(0.5)
 
 # So what is the probability of seeing something more extreme than our value?
 pVal <- pbinom(numPos, size = size, prob = hypPrev)
-
-# Why do I find 1- the probability?
 pVal <- 1- pVal
+# Why do I find 1- the probability?
+
 # We could have also done this directly:
-# pVal <- pbinom(numPos, size = size, prob = 0.15, lower.tail = FALSE)
+pVal <- pbinom(numPos, size = size, prob = 0.15, lower.tail = FALSE)
 
 pVal
 # Is that our p value? Not quite, but almost! What other values would be
@@ -93,8 +94,8 @@ pVal < alpha
 # We could also do this a different way. We can reject the null hypothesis
 # if our data our more extreme than 95% of the samples under our null, so we can find the
 # values for the 95% CI and compare to our data:
-hypCI <- qbinom(p = c(0.025,0.975), size = size, prob = hypPrev)
-hypCI
+hypRange <- qbinom(p = c(0.025,0.975), size = size, prob = hypPrev)
+hypRange
 
 # Before going on, let's go back, and see what happens with a hypothetical prevalence of 20%
 
@@ -105,12 +106,17 @@ hypCI
 possibleTruePrevalence <- seq(from = 0, to = 1, length.out = 10000)
 
 findPVal <- function(hypPrev, numPos, size){
-  if(numPos < hypPrev*size)
-  {
+  # Our number could be above or below the mean, which
+  # means we need to sample from different tails
+  # depending on where it is
+  if(numPos < hypPrev*size){
+    # If it's less then the mean use the left tail
     pValOneSide <- pbinom(numPos, size, hypPrev, lower.tail = TRUE)
   }else{
+    # if it's more than the mean use the right tail
     pValOneSide <- pbinom(numPos-1, size, hypPrev, lower.tail = FALSE)
   }
+  # Return the two tail p value
   2*pValOneSide
 }
 
@@ -137,7 +143,32 @@ text(ci.l,.4, ci.l,cex = 1,pos = 3)
 text(ci.u,.4, ci.u,cex = 1,pos = 3)
 
 ###########################################
-# Permutation Tests
+# Sampling for hypothesis testing
+###########################################
+# So one powerful way for hypothesis testing is to set up a null distribution,
+# sample from that distribution, and compare it to your data to accept/reject.
+# We'll start with a basic example where we have a well-defined distribution, but
+# then show how this technique can be used for any distribution that generates your data
+
+# Let's go back to this flu prevalence example for one quick second.
+# If we wanted to test whether the true prevalence was 15%, since we know
+# the distribution (binomial), we could take a bunch of samples from it and then
+# compare that to our data (numPos=23) in this case
+binSample <- rbinom(100000, size = size, prob = 0.15)
+
+oneSidePVal <- sum(binSample > numPos)/100000 # one tailed test
+oneSidePVal < alpha/2
+
+# Do our data support acceptance or rejection based on this result?
+
+# This was a basic example, where we don't need to do this, because we could
+# use the q or p function with binom, but what if we have a weird distribution
+# that R doesn't have premade for us? As long as we can sample from it
+# we can hypothesis test with our data -- See the end of this script for how to do that
+
+
+###########################################
+# Permutation Tests -- My favorite
 ###########################################
 # Okay new example
 # You are a fish researcher, and you're investigating the influence of 
@@ -199,6 +230,67 @@ fishCI <- quantile(x = diffs, probs = c(0.025, 0.975))
 fishCI
 ourDiff > fishCI
 
+# Let's say now we also have a water quality metric (score out of 100)
+# Assume 5 fish were in each tank
+fishData$waterQual <- c(rep(85, 5), rep(90, 5), rep(93, 5), rep(95, 5)) 
+
+# Does it seem like the water quality is correlated with weights?
+cor(fishData$waterQual, fishData$weights)
+# Maybe, but how could we use a permutation test to test this?
+# Try coding it up yourself!
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################################################
+# Example of sampling from a weird distribution
+###################################################
+# For example, let's say you go out and measure the heights of students at UT,
+# and you're new to this whole thing and forget to measure the genders
+# What might this distribution look like? would it be normally distributed?
+hist(rnorm(10000, mean = 66, sd = 3), freq=FALSE)
+curve(dnorm(x, mean=66, sd=3), add=T)
+
+# Maybe, but likely you would have a bimodal distribution corresponding to males and females
+# How could we make a function to sample from that distribution?
+singleSample <- function(maleMean, maleSD, femaleMean, femaleSD){
+  # First we have to figure out which distribution we are sampling from
+  # Let's assume that 51% of our population is female, and that we have an equal chance of selecting 
+  # any individual, then with what probability should we sample from our male/female populations?
+  prob <- runif(1, min = 0, max = 1)
+  
+  if(prob > 0.51){
+    # Sample from Male distribution
+    return(rnorm(1, mean=maleMean, sd=maleSD) )
+  } else{
+    # Sample from Female distribution
+    return(rnorm(1, mean=femaleMean, sd=femaleSD) )
+  }
+}
+
+# Let's assume that from other studies, we already know the true mean and sd for
+# the college population we're looking at 
+# for sampling hypothesis testing you need to know the data generating process
+singleSample(maleMean = 68, maleSD = 2, femaleMean = 62, femaleSD=2)
+
+# Can you tell which distribution it sampled from?
+# Let's take a lot of samples and look at what this looks like
+samps <- vector(mode = "numeric", length = 10000)
+for(i in 1:10000){
+  samps[i] <- singleSample(maleMean = 68, maleSD = 2, femaleMean = 62, femaleSD=2) 
+}
+
+hist(samps, freq=FALSE, breaks = 50)
+# Awesome, so now you can clearly see the two peaks

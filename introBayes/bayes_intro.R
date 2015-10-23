@@ -13,7 +13,7 @@
 # License: http://mmed2015.ici3d.org/license.html
 ##################################################
 rm(list=ls())
-library(boot); library(coda)
+library(boot); library(coda); library(rjags)
 
 # There's a terrible new epidemic ravaging the population!
 # You go out in the field during this terrible epidemic, find 100 people randomly
@@ -74,12 +74,13 @@ runMCMC <- function(iterations ## Number of mcmc iterations to run
   chain[1,] <- startvalue ## set first value of chain
   
   for(ii in 1:iterations){ 
-    # Symmetric proposal around current state
+    # Symmetric proposal around current state (parameter)
     proposal <- rnorm(1, chain[ii,], proposerSD) 
     
     # Calculate the MHratio -- First need to inverse logit prevalences, because we are sampling
     # using the logit scale originally
     MHratio <- exp(logLikePrior(inv.logit(proposal)) -  logLikePrior(inv.logit(chain[ii,])))
+    
     ## If the MH-ratio is > 1, accept new value. Otherwise, accept it with probability equal to
     ## the the MH-ratio.
     if(runif(1) < MHratio){ 
@@ -177,54 +178,92 @@ gelman.diag(chainList)
 # Introduction to rjags
 # Necessitates JAGS installed separately on computer
 # Also need file ("linReg.jags") which will be in github repo
+# or you can write the model in inline code (new version), but still need JAGS installed separately
 #  more info here: http://www.r-bloggers.com/getting-started-with-jags-rjags-and-bayesian-modelling/
 ##################################################
 rm(list=ls())
 library(rjags)
-setwd("~/projects/CCBB_Intro_Biostats/introBayes/")
-N <- 1000
-x <- 1:N
-epsilon <- rnorm(N, 0, 1)
-y <- x + epsilon
+# setwd("~/projects/CCBB_Intro_Biostats/introBayes/")
 
+# Create fake data to test linear model inference
+# We will create data to mimic the murder rate (per 100,000 people) in a given city
+# as a function of the moon visibility
+
+# setup number of samples of fake data
+N <- 100   ## 100 data points
+
+# sample N "moon visibilities" 0 = no moon, 1 = full moon
+x <- sample(x=seq(0,1, length.out = 10000), size =N, replace = T)
+
+# sample our intercept (true value == 15)
+trueAlpha <- 15
+alphas <- rnorm(N, trueAlpha, 1)
+
+# sample our slope 
+trueBeta <- 5
+betas <- rnorm(N, trueBeta, 1)
+
+# generate random murder rate samples
+y <- x * betas + alphas
+
+dev.off()
+plot(x,y,xlab="Moon Size", ylab="Murder Rate per 100,000 people")
 # Model formulation in text file
-# model {
-#   for (i in 1:N){
-#     y[i] ~ dnorm(y.hat[i], tau)
-#     y.hat[i] <- a + b * x[i]
-#   }
-#   a ~ dnorm(0, .0001)
-#   b ~ dnorm(0, .0001)
-#   tau <- pow(sigma, -2)
-#   sigma ~ dunif(0, 100)
-# }
+# careful: JAGS USES PRECISION NOT STANDARD DEVIATION
+# precision = 1/variance
+linMod <- "model {
+  for (i in 1:N){
+    y[i] ~ dnorm(y.hat[i], tau)
+    y.hat[i] <- a + b * x[i]
+  }
+  a ~ dnorm(0, .0001)
+  b ~ dnorm(0, .0001)
+  tau <- pow(sigma, -2)
+  sigma ~ dunif(0, 100)
+}"
 
-# Setup jags model for use in R
-mod <- jags.model('linReg.jags',
+
+# Setup jags model for use in R using inline code version
+mod <- jags.model(textConnection(linMod),
                    data = list('x' = x,
                                'y' = y,
                                'N' = N),
                    n.chains = 4,
                    n.adapt = 100)
 
+#Specify model with separate file
+# mod <- jags.model("linReg.jags",
+#                   data = list('x' = x,
+#                               'y' = y,
+#                               'N' = N),
+#                   n.chains = 4,
+#                   n.adapt = 100)
+
 # Burn in period
 update(mod, 1000)
 
 # Posterior samples
-posterior <- jags.samples(mod, c('a', 'b'), 1000)
+posterior <- jags.samples(mod, c('a', 'b', 'tau'), 1000)
 
+# Convert for plotting and analysis below
 postA <- as.mcmc.list(posterior$a)
 postB <- as.mcmc.list(posterior$b)
 
+# Compare results to the true alpha and beta values!
 summary(postA)
 summary(postB)
 
+# Plot the four chains and the posterior distribution for both alpha and beta
 plot(postA)
 plot(postB)
 
+# Check convergence
 gelman.plot(postA)
 gelman.diag(postA)
 gelman.plot(postB)
 gelman.diag(postB)
+
+# What happens as you change the standard deviation of our sample data?
+# How do our estimates change?
 
 

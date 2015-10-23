@@ -263,7 +263,9 @@ gelman.diag(postA)
 gelman.plot(postB)
 gelman.diag(postB)
 
-# What happens as you change the standard deviation of our sample data?
+# Try changing the means and standard deviations from our sample data.
 # How do our estimates change?
+# Are they more or less accurate?
+
 
 

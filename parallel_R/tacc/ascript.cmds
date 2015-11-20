@@ -1,0 +1,2 @@
+./ascript.R hello out.txt
+./ascript.R world out.txt
